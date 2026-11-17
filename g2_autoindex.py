@@ -197,7 +197,7 @@ def find_conograph(user=None):
     return None
 
 def write_conograph_inputs(wd, hist, tth, inten, fwhm, lam, zero, search, npeaks, nthreads):
-    with open(os.path.join(wd, 'cntl.inp.xml'), 'w') as f:
+    with open(os.path.join(wd, 'cntl.inp.xml'), 'w', newline='\n') as f:
         f.write("<ZCodeParameters>\n  <ConographInputFile>\n"
                 "    <ControlParamFile> g2.inp.xml </ControlParamFile>\n"
                 "    <PeakDataFile> g2_pks.histogramIgor </PeakDataFile>\n"
@@ -207,7 +207,7 @@ def write_conograph_inputs(wd, hist, tth, inten, fwhm, lam, zero, search, npeaks
     outflags = ''.join('    <Output%s> 1 </Output%s>\n' % (t, t) for t in (
         'Triclinic', 'MonoclinicP', 'MonoclinicB', 'OrthorhombicP', 'OrthorhombicC', 'OrthorhombicI',
         'OrthorhombicF', 'TetragonalP', 'TetragonalI', 'Rhombohedral', 'Hexagonal', 'CubicP', 'CubicI', 'CubicF'))
-    with open(os.path.join(wd, 'g2.inp.xml'), 'w') as f:
+    with open(os.path.join(wd, 'g2.inp.xml'), 'w', newline='\n', encoding='utf-8') as f:
         f.write('<?xml version="1.0" encoding="UTF-8" ?>\n<ZCodeParameters>\n  <ConographParameters>\n'
                 '    <IsAngleDispersion> 1 </IsAngleDispersion>\n'
                 '    <ConversionParameters>       </ConversionParameters>\n'
@@ -238,10 +238,13 @@ def write_conograph_inputs(wd, hist, tth, inten, fwhm, lam, zero, search, npeaks
                 % (zero, lam, 1 if search == 'regular' else 0, ('%d' % npeaks) if npeaks else 'AUTO',
                    outflags, nthreads))
     x, y = hist['x'], hist['y']
-    with open(os.path.join(wd, 'g2_pks.histogramIgor'), 'w') as f:
-        f.write('IGOR\nWAVES/O wave0, wave1, sqrt_of_wave1\nBEGIN\n')
+    # Meme format que les fichiers produits par PeakSearch (4 colonnes, fins de ligne LF, nombres avec un point) :
+    # c'est ce que lisent toutes les versions de Conograph, y compris l'ancienne version Windows (2020).
+    with open(os.path.join(wd, 'g2_pks.histogramIgor'), 'w', newline='\n', encoding='ascii') as f:
+        f.write('IGOR\nWAVES/O wave0, wave1, sqrt_of_wave1, smth_wave1\nBEGIN\n')
         for a, b in zip(x, y):
-            f.write('%12.5f %15.6E %15.6E\n' % (a, b, np.sqrt(max(b, 1.))))
+            b = float(b)
+            f.write('%10.5f %15.6E %15.6E %15.6E\n' % (float(a), b, np.sqrt(max(b, 1.)), b))
         f.write('END\nWAVES/O peak, peakpos, height, FWHM, Flag\nBEGIN\n')
         for i, (t, h, w) in enumerate(zip(tth, inten, fwhm)):
             f.write('%5d %15.6E %15.6E %15.6E %4d\n' % (i + 1, t, max(h, 1.), w, 1))
@@ -296,7 +299,7 @@ def run_conograph(exe, hist, tth, inten, lam, zero=0., search='quick', npeaks=No
         pass
     out = os.path.join(wd, 'output', 'g2.index.xml')
     if not os.path.isfile(out):
-        raise RuntimeError("Conograph n'a pas produit de resultat.\n" + log)
+        raise RuntimeError("Conograph n'a pas produit de resultat (fichiers de travail conserves dans %s).\n%s" % (wd, log))
     return out, dt, wd
 
 # --------------------------------------------------------------------------
@@ -1290,7 +1293,11 @@ def main(argv=None):
                 if not a.keep:
                     shutil.rmtree(wd, ignore_errors=True)
             except Exception as e:
-                by_method['conograph']['msgs'].append('echec : %s' % str(e).strip().splitlines()[-1])
+                lines = [l for l in str(e).strip().splitlines() if l.strip()]
+                by_method['conograph']['msgs'].append('echec : %s' % (lines[-1] if lines else e))
+                m = re.search(r'conserves dans (\S+?)\)', str(e))
+                if m:
+                    by_method['conograph']['msgs'].append('fichiers de travail : %s' % m.group(1))
         else:
             by_method['conograph']['msgs'].append('executable introuvable (option --conograph ou variable CONOGRAPH)')
 
