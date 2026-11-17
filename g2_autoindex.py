@@ -187,7 +187,10 @@ def find_conograph(user=None):
     cands = [user] if user else []
     cands += [os.environ.get('CONOGRAPH'), shutil.which('Conograph'), shutil.which('Conograph.exe'),
               os.path.expanduser('~/ProjectPowderConograph/Conograph/src/Conograph'),
-              os.path.expanduser('~/ProjectPowderConograph/Conograph/src/Conograph.exe')]
+              os.path.expanduser('~/ProjectPowderConograph/Conograph/src/Conograph.exe'),
+              shutil.which('Conograph CUI.exe'),                                   # version Windows de Z-Code
+              r'C:\Program Files (x86)\Conograph\Conograph CUI.exe',
+              r'C:\Program Files\Conograph\Conograph CUI.exe']
     for c in cands:
         if c and os.path.isfile(os.path.expanduser(c)) and os.access(os.path.expanduser(c), os.X_OK):
             return os.path.abspath(os.path.expanduser(c))

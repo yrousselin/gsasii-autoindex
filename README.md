@@ -54,7 +54,7 @@ Without Conograph, the three other methods still work.
 ### Step 2: install Conograph (recommended)
 
 1. Download Conograph from the [Z-Code downloads page](https://z-code-software.com/downloads/) and unpack it in a folder of your choice. It can also be compiled from its source code.
-2. Note the full path of the **Conograph** program (`Conograph.exe` on Windows).
+2. Note the full path of the **command-line** Conograph program. On Windows, the Z-Code installer provides several `.exe` files: use **`Conograph CUI.exe`** (by default `C:\Program Files (x86)\Conograph\Conograph CUI.exe`, found automatically), not `Conograph GUI.exe` or `PeakSearch CUI.exe`.
 3. The plugin finds it automatically if it is on the system path or if the `CONOGRAPH` environment variable points to it. Otherwise, type its path in the **Exécutable Conograph** field of the plugin window the first time. It is remembered afterwards.
 
 ### Step 3: restart GSAS-II
